@@ -1,0 +1,167 @@
+<htmL>
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+</head>
+<body>
+<div id="msg"></div>
+<div class="container">
+    <h1>Login</h1>
+        <form method="POST">
+      <div>
+        <label for="username">Username</label>
+        <input type="text" id="username" required>
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input type="password" id="password"  required>
+      </div>
+      <button class="btn btn-success" id="login-button" onclick="LoginUser()">Login</button>
+    </form><br>
+
+    <button class="btn btn-info" onclick="window.location.href = '/signup'">sign up</button>
+    <button id="Studentsinfo" class="btn btn-warning" >Students</button>
+    <button id="newToken" class="btn btn-info" onclick="newToken()">New Token</button>
+
+
+
+</div>
+</body>
+<script>
+
+var LoginUser = () => {
+  console.log("Before Ajax -- Login is called");
+  var username = $('#username').val();
+  var password = $('#password').val();
+  jQuery.ajax({
+  url:'/login',
+  method: 'POST',
+  contentType: 'application/json',
+  data:JSON.stringify({ username : username , password: password }),
+  success:async function(response){
+    console.log('Ajax is complete,,....Login is called');
+      alert(response.message);
+      console.log(await response);
+      localStorage.setItem("lastname", "Smith");
+      localStorage.setItem("token",await response.token);
+      localStorage.setItem("refreshtoken",await response.refreshtoken);
+      $('#msg').text(await response.message);
+      window.location.replace("/table");
+    }
+  });
+};
+
+
+
+$(document).ready(function(){
+
+$('#Studentsinfo').on('click',function(){
+  if(localStorage.getItem("token")){
+  jQuery.ajax({
+    url:'/verify',
+    method: 'GET',
+    headers: { 'Accept': 'Application/json',
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer ' + localStorage.getItem("token") },
+    success:function(response){
+      console.log("checking token is valid or expired : "+response);
+      if(response=="YES"){
+        window.location.replace("/table");
+      }else{
+        alert("Your token is expired in..");
+      }
+    }
+  })
+  }else{
+    alert("You are not logged in..");
+  }
+})
+
+// var checkingToken = () => {
+// if(localStorage.getItem("token")){
+//   jQuery.ajax({
+//     url:'/verify',
+//     method: 'GET',
+//     headers: { 'Accept': 'Application/json',
+//           'Content-Type': 'application/json',
+//           'authorization': 'Bearer ' + localStorage.getItem("token") },
+//     success:function(response){
+//       console.log("checking token is valid or expired : "+response);
+//       if(response=="YES"){ window.location.replace("/table");  }
+//       // if(response=="NO"){  window.location.replace("/signup");   }
+//     }
+//   })
+//   }
+// }
+// checkingToken();
+
+
+
+})/// document.ready
+
+$('#secret').on('click',function(){
+  jQuery.ajax({
+    url:'/secret',
+    method: 'GET',
+    headers: { 'Accept': 'Application/json',
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer ' + localStorage.getItem("token") },
+    success:function(response){
+      console.log(response);
+      $("#msg").text("something you can see : "+ response.message);
+    }
+  })
+})
+
+
+////////////////////////// for getting new token
+var newToken = () => {
+  // if(localStorage.getItem("token") && localStorage.getItem("refreshtoken")){
+    console.log("new token is called");
+    var refreshtoken = localStorage.getItem("refreshtoken");
+    var token = localStorage.getItem("token");
+    console.log( refreshtoken , token);
+  jQuery.ajax({
+    url:'/token',
+    method: 'POST',
+    contentType: 'application/json',
+    data:JSON.stringify({token: refreshtoken }),
+    success: async function(response){
+      console.log("checking token is valid or expired : "+response);
+      // if(response=="YES"){ window.location.replace("/table");  }
+      // if(response=="NO"){  window.location.replace("/signup");   }
+      localStorage.setItem("token",await response.accessToken);
+       }
+    })
+  // }
+}
+
+
+
+
+///// for logout///////////
+$("#logout").on('click',function(){
+localStorage.removeItem('lastname');
+localStorage.removeItem('token');
+jQuery.ajax({
+  url:'/logout',
+  method: 'DELETE',
+  contentType: 'application/json',
+  data:JSON.stringify({token: localStorage.getItem("refreshtoken") }),
+  success:function(response){
+    console.log(response);
+    $("#msg").text("something you can see : "+ response.message);
+    }
+  })
+
+})
+
+
+</script>
+
+
+   <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+</htmL>
